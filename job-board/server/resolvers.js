@@ -1,14 +1,25 @@
 import { getCompany } from "./db/companies.js";
-import { getJobs } from "./db/jobs.js"
+import { getJob, getJobs, getJobsByCompany } from "./db/jobs.js"
 
 export const resolvers = {
     Query: {
         jobs: async function () {
 
-            console.log('hola');
             return getJobs()
         },
 
+        job:(_,{id})=>{
+          
+            return getJob(id)
+
+        },
+        company:(_,{id})=>{
+            return getCompany(id);
+        }
+
+    },
+    Company:{
+        jobs:(company)=>getJobsByCompany(company.id)
     },
     Job: {
   

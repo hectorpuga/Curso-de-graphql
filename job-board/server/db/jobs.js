@@ -8,6 +8,8 @@ export async function getJobs() {
 }
 
 export async function getJob(id) {
+  console.log('hola');
+  console.log(await getJobTable().first());
   return await getJobTable().first().where({ id });
 }
 
@@ -21,6 +23,12 @@ export async function createJob({ companyId, title, description }) {
   };
   await getJobTable().insert(job);
   return job;
+}
+
+export async function getJobsByCompany(companyId){
+
+  return await getJobTable().select().where({companyId})
+
 }
 
 export async function deleteJob(id) {
