@@ -29,8 +29,8 @@ function CompanyPage() {
   }, [companyId])
 
   console.log(companyId);
-  getCompany(companyId);
-  const [company,loading,error]=state;
+ 
+  const {company,loading,error}=state;
   if (loading) {
     return (<div>Loading .....</div>)
   }

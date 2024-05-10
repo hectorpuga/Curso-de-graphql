@@ -1,51 +1,42 @@
-import { getCompany } from "./db/companies.js";
-import { getJob, getJobs, getJobsByCompany } from "./db/jobs.js"
-import {GraphQLError} from 'graphql';
+import { GraphQLError } from 'graphql';
+import { getCompany } from './db/companies.js';
+import { getJob, getJobs, getJobsByCompany } from './db/jobs.js';
 
 export const resolvers = {
-    Query: {
-        jobs: async function () {
-
-            return getJobs()
-        },
-
-        job:async(_,{id})=>{
-          const job=await getCompany(id);
-          if(!job){
-            throw notFoundError('No se encuentra compañia')
-        }
-        return job;
-
-        },
-        company:async(_,{id})=>{
-            const company=await getCompany(id);
-            if(!company){
-                throw notFoundError('No se encuentra trabajo')
-            }
-            return company;
-        }
-
+  Query: {
+    company: async (_root, { id }) => {
+      const company = await getCompany(id);
+      if (!company) {
+        throw notFoundError('No Company found with id ' + id);
+      }
+      return company;
     },
-    Company:{
-        jobs:(company)=>getJobsByCompany(company.id)
+    job: async (_root, { id }) => {
+      const job = await getJob(id);
+      if (!job) {
+        throw notFoundError('No Job found with id ' + id);
+      }
+      return job;
     },
-    Job: {
-  
-        date: (job)=> toIsoDate(job.createdAt),
-        company:(job)=>getCompany(job.companyId)
-        }
-        
-    }
+    jobs: () => getJobs(),
+  },
 
- 
+  Company: {
+    jobs: (company) => getJobsByCompany(company.id),
+  },
 
-    function notFoundError(message){
-        return new GraphQLError(message,{
-            extensions:{
-                code:'NOT_FOUND'
-            }
-        })
-    }
+  Job: {
+    company: (job) => getCompany(job.companyId),
+    date: (job) => toIsoDate(job.createdAt),
+  },
+};
 
+function notFoundError(message) {
+  return new GraphQLError(message, {
+    extensions: { code: 'NOT_FOUND' },
+  });
+}
 
-const toIsoDate=(value)=>value.slice(0,'yyyy-mm-dd'.length);
+function toIsoDate(value) {
+  return value.slice(0, 'yyyy-mm-dd'.length);
+}
