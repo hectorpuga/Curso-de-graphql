@@ -5,7 +5,9 @@ type Query{
 }
 
 type Mutation{
-    createJob(title:String!,description:String):Job
+    createJob(input:CreateJobInput!):Job
+    removeJob(id:ID!):Job
+    updateJob(input:updateJobInput!):Job
 }
 
 type Company {
@@ -26,4 +28,16 @@ type Job{
     date:String!
 }
 
-input
+# // este tipo de input, sirve para crear o definir los parametros que contendra o se le enviara a un mutation al resolver
+
+
+input CreateJobInput{
+title:String!,
+description:String
+}
+
+input updateJobInput{
+    id:ID!,
+    title:String!,
+    description:String
+}

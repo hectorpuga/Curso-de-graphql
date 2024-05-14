@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { getCompany } from './db/companies.js';
-import { createJob, getJob, getJobs, getJobsByCompany } from './db/jobs.js';
+import { createJob, deleteJob, getJob, getJobs, getJobsByCompany, updateJob } from './db/jobs.js';
 
 export const resolvers = {
   Query: {
@@ -33,12 +33,19 @@ export const resolvers = {
 
 
 
-  Mutation:{
-    createJob:(_root,{title,description})=>{
-        const companyId='FjcJCHJALA4i'; // TODO set based on user
-       return createJob({companyId,title,description})
+  Mutation: {
+    createJob: (_root, { input: { title, description } }) => {
+      const companyId = 'FjcJCHJALA4i'; // TODO set based on user
+      return createJob({ companyId, title, description })
 
-    }
+    },
+    removeJob: (_root, { id }) => {
+      return deleteJob(id);
+
+    },
+    updateJob:(_root,{input:{id,title,description}})=>updateJob({id,title,description})
+
+    
   }
 };
 
