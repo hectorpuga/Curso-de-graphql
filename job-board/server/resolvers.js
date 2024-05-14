@@ -34,8 +34,12 @@ export const resolvers = {
 
 
   Mutation: {
-    createJob: (_root, { input: { title, description } }) => {
-      const companyId = 'FjcJCHJALA4i'; // TODO set based on user
+    createJob: (_root, { input: { title, description } },{user}) => {
+
+      if(!user){
+        throw unauthorizedError('Missing authentication')
+      }
+      const companyId = user.companyId; // TODO set based on user
       return createJob({ companyId, title, description })
 
     },
@@ -48,6 +52,11 @@ export const resolvers = {
     
   }
 };
+function unauthorizedError(message) {
+  return new GraphQLError(message, {
+    extensions: { code: 'UNAUTHORIZED' },
+  });
+}
 
 function notFoundError(message) {
   return new GraphQLError(message, {
