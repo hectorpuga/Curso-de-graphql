@@ -34,22 +34,43 @@ export const resolvers = {
 
 
   Mutation: {
-    createJob: (_root, { input: { title, description } },{user}) => {
+    createJob: (_root, { input: { title, description } }, { user }) => {
 
-      if(!user){
+      if (!user) {
         throw unauthorizedError('Missing authentication')
       }
       const companyId = user.companyId; // TODO set based on user
-      return createJob({ companyId, title, description })
+      return createJob({ companyId,companyId:user.companyId, title, description, })
 
     },
-    removeJob: (_root, { id }) => {
-      return deleteJob(id);
+    removeJob: async (_root, { id }, { user }) => {
+      if (!user) {
+        throw unauthorizedError('Missing authentication')
+      }
+      const job = await deleteJob(id, user.companyId);
+
+      if (!job) {
+
+        throw notFoundError('No Job found with id ' + id);
+      }
+      return job;
 
     },
-    updateJob:(_root,{input:{id,title,description}})=>updateJob({id,title,description})
+    updateJob: async (_root, { input: { id, title, description } }, { user }) => {
+      if (!user) {
+        throw unauthorizedError('Missing authentication')
+      }
+      const job = await updateJob({ id, title, description })
 
-    
+      if (!job) {
+        throw notFoundError('No Job found with id ' + id);
+
+      }
+      return job;
+
+    }
+
+
   }
 };
 function unauthorizedError(message) {
