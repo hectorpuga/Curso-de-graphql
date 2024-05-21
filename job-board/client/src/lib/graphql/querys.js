@@ -1,46 +1,49 @@
-import { GraphQLClient, gql } from "graphql-request";
+// import { GraphQLClient } from "graphql-request";
 import { getAccessToken } from '../auth';
-const client = new GraphQLClient('http://localhost:9000/graphql', {
-  headers: () => {
+import {ApolloClient, InMemoryCache,createHttpLink,gql,concat, ApolloLink} from '@apollo/client'
+// const client = new GraphQLClient('http://localhost:9000/graphql', {
+//   headers: () => {
 
-    const acessToken = getAccessToken();
-    if (acessToken) {
-      return { 'Authorization': `Bearer ${acessToken}` }
-    }
-    return {};
-  }
+//     const acessToken = getAccessToken();
+//     if (acessToken) {
+//       return { 'Authorization': `Bearer ${acessToken}` }
+//     }
+//     return {};
+//   }
+// });
+
+const httpLink=createHttpLink({uri:'http://localhost:9000/graphql'});
+const authLink=new ApolloLink((operation,forward)=>{
+  console.log('[cutomLink operation: ',operation);
+  const acessToken = getAccessToken();
+      if (acessToken) {
+        operation.setContext({
+          headers:{
+            'Authorization': `Bearer ${acessToken}` 
+          }
+        })
+      }
+    
+  return forward(operation);
+})
+const apollCliente=new ApolloClient({
+  // uri:'http://localhost:9000/graphql',
+  link: concat(authLink,httpLink),
+  cache: new InMemoryCache(),
+  // defaultOptions:{
+  //   query:{
+  //     fetchPolicy:'network-only'
+  //   },
+  //   watchQuery: {
+  //     fetchPolicy:'network-only'
+  //   }
+  // }
 });
-export async function createJob({ title, description }) {
 
-  const mutation = gql`
+const jobDetailFragment=gql`
 
-  mutation CreateJob($input:CreateJobInput!){
-
-    job:createJob(input:$input){
-      id
-    }
-  }
-  
-  `;
-
-  const { job } = await client.request(mutation, {
-    input: {
-      title,
-      description
-    }
-  })
-
-  return job;
-
-}
-
-export async function getJob(id) {
-  const query = gql`
-
-query getJobByID($id:ID!) {
-
-job(id:$id) {
-  id
+fragment jobDetails on Job{
+   id
   title
   company {
     name
@@ -49,17 +52,75 @@ job(id:$id) {
   description,
   date
 }
+`;
+const jobByIdQuery = gql`
 
+query getJobByID($id:ID!) {
+
+job(id:$id) {
+ ...jobDetails
 }
 
 
-
+}
+${jobDetailFragment}
 `;
+export async function createJob({ title, description }) {
+
+  const mutation = gql`
+
+  mutation CreateJob($input:CreateJobInput!){
+
+    job:createJob(input:$input){
+    ...jobDetails
+    }
+  }
+  ${jobDetailFragment}
+  `;
+
+  // const { job } = await client.request(mutation, {
+  //   input: {
+  //     title,
+  //     description
+  //   }
+  // })
+
+  const {data}=await apollCliente.mutate({
+    mutation,
+    variables:{
+      input:{
+        title,
+        description
+      },
+      
+    },
+    update:(cache,{data})=>{
+      console.log(data.job.id);
+      console.log(data);
+      cache.writeQuery({
+        query:jobByIdQuery,
+        variables:{
+          id:data.job.id,
+        },
+        data
+
+      })
+    }
+  })
+
+  return data.job;
+
+}
+
+export async function getJob(id) {
 
 
-  const { job } = await client.request(query, { id });
 
-  return job;
+  // const { job } = await client.request(query, { id });
+  const {data}= await apollCliente.query({query:jobByIdQuery,variables:{id}});
+
+
+  return data.job;
 }
 
 
@@ -81,9 +142,10 @@ export async function getCompany(id) {
 }
   `;
 
-  const { company } = await client.request(query, { idCompany: id });
+const {data}= await apollCliente.query({query,variables:{"idCompany":id}});
+
   // console.log(company);
-  return company;
+  return data.company;
 }
 
 
@@ -93,7 +155,7 @@ export async function getJobs() {
   const query = gql`
   
 
-        query{
+        query Jobs{
             jobs {
               date
               title
@@ -110,8 +172,8 @@ export async function getJobs() {
     
     `;
 
-  const data = await client.request(query);
+  // const data = await client.request(query);
+  const data= await apollCliente.query({query,fetchPolicy:'network-only'});
 
-  return data.jobs;
-
+  return data.data.jobs;
 }
