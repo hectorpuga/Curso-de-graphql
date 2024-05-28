@@ -1,30 +1,18 @@
-import { useEffect, useState } from 'react';
 import JobList from '../components/JobList';
-import { jobs } from '../lib/fake-data';
-import { getJobs,getCompany } from '../lib/graphql/querys';
+import { useJobs } from '../lib/graphql/hooks.js';
 
 
  function HomePage() {
 
-  const [jobs,setJobs]=useState([]);
-  getCompany("FjcJCHJALA4i").then(
-    (d)=>{
-      console.log(d);
-    }
-  )
-  
+  const {jobs,loading,error}=useJobs();
 
-  useEffect(()=>{
-
-  async function getJobs2(){
-    const datos=await getJobs();
-
-    console.log(datos);
-    setJobs(datos2=>[...datos2,...datos])
+  if (loading) {
+    return (<div>Loading .....</div>)
   }
+  if(error){
+    return (<div className='has-text-danger'>Datos no disponibles</div>)
 
-  getJobs2()
-  },[]);
+  }
   return (
     <div>
       <h1 className="title">

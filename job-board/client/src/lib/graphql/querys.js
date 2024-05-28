@@ -26,7 +26,7 @@ const authLink=new ApolloLink((operation,forward)=>{
     
   return forward(operation);
 })
-const apollCliente=new ApolloClient({
+export const apollCliente=new ApolloClient({
   // uri:'http://localhost:9000/graphql',
   link: concat(authLink,httpLink),
   cache: new InMemoryCache(),
@@ -53,81 +53,8 @@ fragment jobDetails on Job{
   date
 }
 `;
-const jobByIdQuery = gql`
 
-query getJobByID($id:ID!) {
-
-job(id:$id) {
- ...jobDetails
-}
-
-
-}
-${jobDetailFragment}
-`;
-export async function createJob({ title, description }) {
-
-  const mutation = gql`
-
-  mutation CreateJob($input:CreateJobInput!){
-
-    job:createJob(input:$input){
-    ...jobDetails
-    }
-  }
-  ${jobDetailFragment}
-  `;
-
-  // const { job } = await client.request(mutation, {
-  //   input: {
-  //     title,
-  //     description
-  //   }
-  // })
-
-  const {data}=await apollCliente.mutate({
-    mutation,
-    variables:{
-      input:{
-        title,
-        description
-      },
-      
-    },
-    update:(cache,{data})=>{
-      console.log(data.job.id);
-      console.log(data);
-      cache.writeQuery({
-        query:jobByIdQuery,
-        variables:{
-          id:data.job.id,
-        },
-        data
-
-      })
-    }
-  })
-
-  return data.job;
-
-}
-
-export async function getJob(id) {
-
-
-
-  // const { job } = await client.request(query, { id });
-  const {data}= await apollCliente.query({query:jobByIdQuery,variables:{id}});
-
-
-  return data.job;
-}
-
-
-
-export async function getCompany(id) {
-
-  const query = gql`
+export const companyByIdQuery = gql`
   query getCompanyBiId($idCompany:ID!){
   company(id: $idCompany){
     description
@@ -141,18 +68,105 @@ export async function getCompany(id) {
   }
 }
   `;
+export const jobByIdQuery = gql`
 
-const {data}= await apollCliente.query({query,variables:{"idCompany":id}});
+query getJobByID($id:ID!) {
 
-  // console.log(company);
-  return data.company;
+job(id:$id) {
+ ...jobDetails
 }
 
 
+}
+${jobDetailFragment}
+`;
 
 
-export async function getJobs() {
-  const query = gql`
+
+export const createJobMutation = gql`
+
+mutation CreateJob($input:CreateJobInput!){
+
+  job:createJob(input:$input){
+  ...jobDetails
+  }
+}
+${jobDetailFragment}
+`;
+// export async function createJob({ title, description }) {
+
+
+//   // const { job } = await client.request(mutation, {
+//   //   input: {
+//   //     title,
+//   //     description
+//   //   }
+//   // })
+
+//   const {data}=await apollCliente.mutate({
+//     createJobMutation,
+//     variables:{
+//       input:{
+//         title,
+//         description
+//       },
+      
+//     },
+//     update:(cache,{data})=>{
+//       console.log(data.job.id);
+//       console.log(data);
+//       cache.writeQuery({
+//         query:jobByIdQuery,
+//         variables:{
+//           id:data.job.id,
+//         },
+//         data
+
+//       })
+//     }
+//   })
+
+//   return data.job;
+
+// }
+
+// export async function getJob(id) {
+
+
+
+//   // const { job } = await client.request(query, { id });
+//   const {data}= await apollCliente.query({query:jobByIdQuery,variables:{id}});
+
+
+//   return data.job;
+// }
+
+
+
+// export async function getCompany(id) {
+
+//   const query = gql`
+//   query getCompanyBiId($idCompany:ID!){
+//   company(id: $idCompany){
+//     description
+//     id
+//     name
+//     jobs{
+//       id
+//       date
+//       title
+//     }
+//   }
+// }
+//   `;
+
+// const {data}= await apollCliente.query({query,variables:{"idCompany":id}});
+
+//   // console.log(company);
+//   return data.company;
+// }
+
+export const jobs = gql`
   
 
         query Jobs{
@@ -172,8 +186,30 @@ export async function getJobs() {
     
     `;
 
-  // const data = await client.request(query);
-  const data= await apollCliente.query({query,fetchPolicy:'network-only'});
 
-  return data.data.jobs;
-}
+// export async function getJobs() {
+//   const query = gql`
+  
+
+//         query Jobs{
+//             jobs {
+//               date
+//               title
+//               id
+//               company {
+//               name
+//               id
+            
+//               }
+//             }
+            
+//           }
+  
+    
+//     `;
+
+//   // const data = await client.request(query);
+//   const data= await apollCliente.query({query,fetchPolicy:'network-only'});
+
+//   return data.data.jobs;
+// }
