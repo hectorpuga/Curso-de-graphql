@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import { createJobMutation } from '../lib/graphql/querys';
 import { useNavigate } from 'react-router';
-import { useMutation } from '@apollo/client';
-import { jobByIdQuery } from "../lib/graphql/querys"
 import { useCreateJob } from '../lib/graphql/hooks';
 
 function CreateJobPage() {
