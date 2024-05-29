@@ -1,10 +1,10 @@
 import { GraphQLError } from 'graphql';
-import {getCompany } from './db/companies.js';
-import { createJob, deleteJob, getJob, getJobs, getJobsByCompany, updateJob } from './db/jobs.js';
+import { getCompany } from './db/companies.js';
+import { createJob, deleteJob, getJob, getJobs, getJobsByCompany, updateJob,countJobs } from './db/jobs.js';
 
 export const resolvers = {
   Query: {
-    company: async (_root, { id }) => {
+    company: async (_root, { id, offset }) => {
       const company = await getCompany(id);
       if (!company) {
         throw notFoundError('No Company found with id ' + id);
@@ -18,7 +18,14 @@ export const resolvers = {
       }
       return job;
     },
-    jobs: () => getJobs(),
+    jobs: async (_root, { limit, offset }) => {
+      const items = await getJobs(limit, offset);
+      const totalCount = await countJobs();
+      return {
+        items,
+        totalcount: totalCount
+      }
+    },
   },
 
   Company: {
@@ -26,7 +33,7 @@ export const resolvers = {
   },
 
   Job: {
-    company: (job,_args,{companyLoader}) => companyLoader.load(job.companyId),
+    company: (job, _args, { companyLoader }) => companyLoader.load(job.companyId),
     date: (job) => toIsoDate(job.createdAt),
   },
 
@@ -40,7 +47,7 @@ export const resolvers = {
         throw unauthorizedError('Missing authentication')
       }
       const companyId = user.companyId; // TODO set based on user
-      return createJob({ companyId,companyId:user.companyId, title, description, })
+      return createJob({ companyId, companyId: user.companyId, title, description, })
 
     },
     removeJob: async (_root, { id }, { user }) => {
