@@ -1,0 +1,33 @@
+import { GraphQLError } from 'graphql';
+import { createMessage, getMessages } from './db/messages.js';
+import { PubSub } from 'graphql-subscriptions';
+
+const pubSub=new PubSub();
+export const resolvers = {
+  Query: {
+    messages: (_root, _args, { user }) => {
+      if (!user) throw unauthorizedError();
+      return getMessages();
+    },
+  },
+
+  Mutation: {
+    addMessage:async (_root, { text }, { user }) => {
+      if (!user) throw unauthorizedError();
+     const  message=await createMessage(user, text);
+     pubSub.publish('MESSAGE_ADD',{messageAddded:message});
+     return message;
+    },
+  },
+  Subscription:{
+    messageAddded:{
+     subscribe:async()=>pubSub.asyncIterator('MESSAGE_ADD')
+    }
+  }
+};
+
+function unauthorizedError() {
+  return new GraphQLError('Not authenticated', {
+    extensions: { code: 'UNAUTHORIZED' },
+  });
+}
