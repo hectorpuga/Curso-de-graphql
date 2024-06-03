@@ -1,0 +1,15 @@
+{
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": true,
+    "outDir": "build",
+    "strict": false
+  },
+  "ts-node": {
+    "esm": true
+  }
+}
